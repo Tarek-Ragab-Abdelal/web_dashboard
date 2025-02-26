@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Glenns-Electronics IoT Dashboard</title>
+    <link rel="icon" href="images/icon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      if (!localStorage.authToken && !sessionStorage.authToken) {
+        window.location.href = "/";
+      } else {
+        const token = localStorage.authToken || sessionStorage.authToken;
+        fetch("/auth", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((response) => {
+            if (response.ok) {
+              console.log("Token validated successfully");
+            } else {
+              console.error("Failed to validate token");
+              window.location.href = "/";
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    </script>
+  </head>
+  <body>
+    <div
+      id="logout"
+      class="status-group"
+      style="text-align: right; padding-right: 30px; padding-top: 2%">
+      <span class="status" style="background-color: darkblue">Sign out</span>
+    </div>
+    <div class="container">
+      <div class="form-container">
+        <h2>Glenns-Electronics IoT Dashboard</h2>
+        <div class="status-group" style="text-align: right; margin-right: 10px">
+          <span id="connectionStatus" class="status disconnected"
+            >Disconnected</span
+          >
+        </div>
+        <div class="grid-container">
+          <!-- Error Flags (Split into individual cards) -->
+          <div class="card error-card">
+            <h3>Tank Low</h3>
+            <p><span id="tankLow">No</span></p>
+          </div>
+          <div class="card error-card">
+            <h3>UV Fail</h3>
+            <p><span id="uvFail">No</span></p>
+          </div>
+          <div class="card error-card">
+            <h3>Flow Fail</h3>
+            <p><span id="flowFail">No</span></p>
+          </div>
+          <div class="card error-card">
+            <h3>MDB Fail</h3>
+            <p><span id="mdbFail">No</span></p>
+          </div>
+          <div class="card error-card">
+            <h3>Other</h3>
+            <p><span id="other">No</span></p>
+          </div>
+
+          <!-- Vending Details -->
+          <div class="card chart-card" style="grid-column: span 3">
+            <h3>Vending Details</h3>
+            <canvas id="vendingChart"></canvas>
+          </div>
+
+          <!-- Changer Details -->
+          <div class="card chart-card">
+            <h3>Changer Details</h3>
+            <canvas id="changerChart"></canvas>
+          </div>
+
+          <!-- Coin and Bill Totals -->
+          <div class="card chart-card" style="max-height: 500px">
+            <h3>Coin and Bill Totals</h3>
+            <canvas id="coinBillChart"></canvas>
+          </div>
+
+          <!-- Transactions -->
+          <div class="card error-card" style="grid-column: span 2">
+            <h3>Transactions</h3>
+            <div class="transaction-container">
+              <div class="transaction-item">
+                <p>Escrow: <span id="escrow">0</span></p>
+              </div>
+              <div class="transaction-item">
+                <p>Cash Total: <span id="cashTotal">$0</span></p>
+              </div>
+              <div class="transaction-item">
+                <p>
+                  Cash Since Last Reset: <span id="cashSinceLastReset">$0</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- System Settings -->
+          <div class="card error-card">
+            <h3>System Settings</h3>
+            <div class="transaction-container">
+              <div class="transaction-item">
+                <p>Decimal Places: <span id="decimalPlaces">2</span></p>
+              </div>
+              <div class="transaction-item">
+                <p>Scale: <span id="scale">5</span></p>
+              </div>
+              <div class="transaction-item">
+                <p>Checksum: <span id="checksum">0</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script>
+      document
+        .getElementById("logout")
+        .addEventListener("click", function (event) {
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = "/";
+        });
+      const logoutElement = document.getElementById("logout");
+      logoutElement.style.cursor = "pointer";
+    </script>
+  </body>
+</html>

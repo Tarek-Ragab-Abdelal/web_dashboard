@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Glenns-Electronics IoT Dashboard</title>
+    <link rel="icon" href="images/icon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="form-container">
+        <!-- Login Form -->
+        <form class="login-form" id="login-form">
+          <h2>Welcome Back</h2>
+          <div class="form-group">
+            <i class="fas fa-user"></i>
+            <input
+              type="text"
+              placeholder="Email or Username"
+              id="username"
+              required />
+          </div>
+          <div class="form-group">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              placeholder="Password"
+              id="password"
+              required />
+          </div>
+          <div class="remember-forgot">
+            <label class="remember-me">
+              <input type="checkbox" id="remember-me" />
+              <span>Remember me</span>
+            </label>
+          </div>
+          <div style="color: red; text-align: center; margin-bottom: 20px">
+            <span id="login-error"></span>
+          </div>
+          <button type="submit" class="submit-btn">Sign In</button>
+          <div class="toggle-form">
+            <span>Don't have an account?</span>
+            <a href="#" onclick="toggleForm(event)">Sign up</a>
+          </div>
+        </form>
+
+        <!-- Register Form -->
+        <form class="register-form hidden" id="register-form">
+          <h2>Create Account</h2>
+          <div class="name-group">
+            <div class="form-group">
+              <i class="fas fa-user"></i>
+              <input
+                type="text"
+                placeholder="First Name"
+                id="first-name"
+                required />
+            </div>
+            <div class="form-group">
+              <i class="fas fa-user"></i>
+              <input
+                type="text"
+                placeholder="Last Name"
+                id="last-name"
+                required />
+            </div>
+          </div>
+          <div class="form-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" placeholder="Email" id="email" required />
+          </div>
+          <div class="form-group">
+            <i class="fas fa-user-circle"></i>
+            <input
+              type="text"
+              placeholder="Username"
+              id="signup-username"
+              required />
+          </div>
+          <div class="form-group">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              placeholder="Password"
+              id="signup-password"
+              required />
+          </div>
+          <div class="form-group">
+            <i class="fas fa-lock"></i>
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              id="confirm-password"
+              required />
+          </div>
+          <div style="color: red; text-align: center; margin-bottom: 20px">
+            <span id="signup-error"></span>
+          </div>
+          <button type="submit" class="submit-btn">Create Account</button>
+          <div class="toggle-form">
+            <span>Already have an account?</span>
+            <a href="#" onclick="toggleForm(event)">Sign in</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function toggleForm(e) {
+        e.preventDefault();
+        const loginForm = document.querySelector(".login-form");
+        const registerForm = document.querySelector(".register-form");
+
+        loginForm.classList.toggle("hidden");
+        registerForm.classList.toggle("hidden");
+      }
+
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+          const rememberMe = document.getElementById("remember-me").checked;
+
+          fetch("/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password, rememberMe }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.token) {
+                if (rememberMe) {
+                  localStorage.setItem("authToken", data.token, { expires: 7 });
+                  fetchDashboard(data.token);
+                } else {
+                  sessionStorage.setItem("authToken", data.token, {
+                    expires: 1,
+                  });
+                  fetchDashboard(data.token);
+                }
+              } else {
+                document.getElementById("login-error").innerHTML = data.message;
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+
+      document
+        .getElementById("register-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const firstname = document.getElementById("first-name").value;
+          const lastname = document.getElementById("last-name").value;
+          const email = document.getElementById("email").value;
+          const username = document.getElementById("signup-username").value;
+          const password = document.getElementById("signup-password").value;
+          const confirmPassword =
+            document.getElementById("confirm-password").value;
+
+          if (password !== confirmPassword) {
+            document.getElementById("signup-error").innerHTML =
+              "Passwords do not match";
+            return;
+          }
+
+          fetch("/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              firstname,
+              lastname,
+              email,
+              username,
+              password,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.token) {
+                sessionStorage.setItem("authToken", data.token, {
+                  expires: 1,
+                });
+                fetchDashboard(data.token);
+              } else {
+                document.getElementById("signup-error").innerHTML =
+                  data.message;
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+
+      // Function to fetch the dashboard with the token
+      function fetchDashboard(token) {
+        if (!token) {
+          window.location.href = "/";
+          return;
+        }
+
+        fetch("/dashboard", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+        })
+          .then((response) => {
+            if (response.ok) {
+              window.location.href = "/dashboard";
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            window.location.href = "/";
+          });
+      }
+    </script>
+  </body>
+</html>
