@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.error("No auth token found");
   }
 
-  const socket = new WebSocket("ws://localhost:3001");
+  const socket = new WebSocket("ws://173.255.238.135:3001");
 
   socket.onopen = function (event) {
     console.log("Connection opened");
